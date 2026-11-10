@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="IT·미디어·AI·IPTV·홈IoT 국내외 주요 기사와 기자 분석을 매일 아침 싣는 웹 신문">
+<meta name="description" content="IT·미디어·AI·IPTV·홈IoT·로봇 국내외 주요 기사와 기자 분석을 매일 아침 싣는 웹 신문">
 <meta property="og:title" content="디지털 조간">
 <meta property="og:description" content="매일 아침, 기술과 미디어의 오늘을 싣습니다">
 <title>디지털 조간</title>
@@ -169,7 +169,7 @@ a:focus-visible { outline: 2px solid var(--spot); outline-offset: 2px; }
 .column-box .sig { font-family: var(--f-label); font-size: 11px; text-align: right; color: var(--ink-soft); }
 
 .teasers {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 18px;
+  display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; margin-top: 18px;
   border-top: 3px solid var(--rule);
 }
 .teaser { padding: 10px 14px 12px; border-right: 1px solid var(--rule); min-width: 0; }
@@ -201,9 +201,9 @@ a:focus-visible { outline: 2px solid var(--spot); outline-offset: 2px; }
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 14px;
 }
 .grid > article { padding: 0 18px 22px; border-left: 1px solid var(--rule); min-width: 0; }
-.grid > article:nth-child(3n+1) { border-left: 0; padding-left: 0; }
-.grid > article.wide { grid-column: span 2; }
-.grid > article.wide + article { }
+.grid > article.rowstart { border-left: 0; padding-left: 0; }
+.grid > article.span2 { grid-column: span 2; }
+.grid > article.span3 { grid-column: 1 / -1; }
 .grid > article .headline { font-size: 22px; }
 .grid > article.wide .headline { font-size: clamp(26px, 3.4vw, 34px); }
 .grid > article.wide .deck { font-size: 16px; }
@@ -244,12 +244,14 @@ footer {
   .front .lead { padding-right: 0; border-right: 0; }
   .front .rail { padding-left: 0; margin-top: 18px; }
   .teasers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .teaser:nth-child(2) { border-right: 0; }
-  .teaser:nth-child(3) { padding-left: 0; }
+  .teasers { grid-auto-flow: row; }
+  .teaser:nth-child(odd) { padding-left: 0; }
+  .teaser:nth-child(even) { border-right: 0; }
   .teaser:nth-child(n+3) { border-top: 1px solid var(--rule); }
+  .teaser:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .grid > article { border-left: 1px solid var(--rule); padding-left: 18px; }
-  .grid > article.wide { grid-column: 1 / -1; border-left: 0; padding-left: 0; padding-right: 0; }
+  .grid > article, .grid > article.rowstart { grid-column: auto; border-left: 1px solid var(--rule); padding-left: 18px; }
+  .grid > article.wide, .grid > article.lone { grid-column: 1 / -1; border-left: 0; padding-left: 0; padding-right: 0; }
   .grid > article.odd-first { border-left: 0; padding-left: 0; }
 }
 @media (max-width: 620px) {
@@ -344,7 +346,14 @@ footer {
 
     const pages = secs.map(s => {
       const arts = s.articles || [];
-      const items = arts.map((a, i) => `<article class="${i === 0 ? 'wide' : ''}${i % 2 === 1 ? ' odd-first' : ''}">
+      // 3단 격자 배치: 첫 기사 2단, 마지막 줄 빈칸은 마지막 기사를 넓혀 채움
+      const spans = arts.map((_, i) => i === 0 ? 2 : 1);
+      const used = spans.reduce((x, y) => x + y, 0) % 3;
+      if (arts.length > 1 && used) spans[spans.length - 1] += 3 - used;
+      let col = 0;
+      const cls = spans.map(sp => { if (col + sp > 3) col = 0; const c = [`span${sp}`]; if (col === 0) c.push('rowstart'); col = (col + sp) % 3; return c.join(' '); });
+      // 2단 화면용: 첫 기사는 전체폭, 이후 2개씩
+      const items = arts.map((a, i) => `<article class="${cls[i]}${i === 0 ? ' wide' : ''}${i > 0 && i % 2 === 1 ? ' odd-first' : ''}${i > 0 && i === arts.length - 1 && i % 2 === 1 ? ' lone' : ''}">
         ${tags(a)}
         <h3 class="headline">${esc(a.headline)}</h3>
         <p class="deck">${esc(a.deck)}</p>
@@ -369,7 +378,7 @@ footer {
     app.innerHTML = `<div class="issue-in">
       <div class="topline">
         <span><b>제${esc(d.issue)}호</b> · ${esc(d.dateLabel)} · ${esc(d.edition || '조간')}</span>
-        <span>IT · 미디어 · AI · IPTV · 홈IoT</span>
+        <span>IT · 미디어 · AI · IPTV · 홈IoT · 로봇</span>
         <span>기사 ${total}건 · 해외 번역 ${globalCount}건</span>
       </div>
       <header class="mast">
