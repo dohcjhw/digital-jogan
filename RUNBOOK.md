@@ -27,6 +27,6 @@
    - 고객 PII·개인 연락처 절대 금지.
    - date, dateLabel("2026년 11월 13일 금요일"), issue, edition "조간", updatedAt(+09:00).
 5. GitHub: editions/<오늘>.json 쓰기, index.json에 {date,label,issue,headline} 추가·정렬·latest 갱신. python으로 유효성 + 섹션 순서 확인. 작성자 "디지털 조간 편집국" <noreply@anthropic.com>, 메시지 "디지털 조간 제N호 발행 (YYYY-MM-DD)" + 세션 attribution 줄. `git fetch` → rebase → push.
-6. 아티팩트: 오늘 자 JSON을 /home/claude/newspaper/edition.json에 복사 → 위 규칙대로 read 후 publish(url, file_path=/home/claude/newspaper/index.html, files={"edition.json": ...}), icon 생략.
+6. 아티팩트: 위 규칙대로 read 후 publish(url, file_path=/home/claude/newspaper/index.html, icon 생략). files에는 세 개를 넣는다: {"edition.json": <오늘 자 JSON>, "editions/<오늘>.json": <오늘 자 JSON>, "editions/index.json": <갱신한 index.json>}. 지난 호 파일은 이미 올라가 있으니 다시 넣지 않는다(빠진 파일은 유지됨). 아티팩트 페이지에도 '지난 호 보기'가 있어 이 파일들이 필요하다.
 7. 다음 날 07:17 KST 점검을 send_later로 이 대화에 예약(at "<내일>T07:17:00[Asia/Seoul]", name "디지털 조간 발행 점검 (백업)", initiation human_schedule, 메시지는 "[디지털 조간 발행 점검] RUNBOOK을 따라 오늘 자가 저장소에 있는지 확인하고, 없으면 대신 발행하라"). 같은 예약이 이미 있으면 중복 예약하지 않는다.
 8. 대신 발행했을 때만 SendUserMessage로 1면 톱 제목, 기사 수(국내/해외), 사이트 주소, 클라우드 발행이 빠진 사실을 알린다. 오늘 자가 이미 있었으면 짧게 "정상 발행 확인"만 남긴다.
